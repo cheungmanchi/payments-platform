@@ -1,0 +1,10 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+.env
+*.p8
+
+# personal notes and AI instructions (not part of the portfolio)
+CLAUDE.md
+.github/copilot-instructions.md

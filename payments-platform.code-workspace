@@ -1,0 +1,34 @@
+{
+  "folders": [
+    { "name": "payments-platform", "path": "." }
+  ],
+  "settings": {
+    "[terraform]": {
+      "editor.defaultFormatter": "hashicorp.terraform",
+      "editor.formatOnSave": true,
+      "editor.tabSize": 2
+    },
+    "[terraform-vars]": {
+      "editor.defaultFormatter": "hashicorp.terraform",
+      "editor.formatOnSave": true
+    },
+    "files.exclude": {
+      "**/.terraform": true
+    },
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "github.copilot.chat.codeGeneration.useInstructionFiles": true
+  },
+  "extensions": {
+    "recommendations": ["hashicorp.terraform", "github.copilot-chat"]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      { "label": "tf: init", "type": "shell", "command": "terraform init", "problemMatcher": [] },
+      { "label": "tf: fmt + validate", "type": "shell", "command": "terraform fmt; terraform validate", "problemMatcher": [] },
+      { "label": "tf: plan", "type": "shell", "command": "terraform plan", "problemMatcher": [], "group": { "kind": "build", "isDefault": true } }
+    ]
+  }
+}

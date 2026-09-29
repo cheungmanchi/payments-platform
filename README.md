@@ -37,6 +37,18 @@ uv run scripts/upload_to_stage.py
 uv run pytest -v                                                  # test_staged_files_match_table fails
 ```
 
+Real output from that run, against a live Snowflake account:
+
+```
+E   AssertionError: Expected header ['txn_id', 'card_id', 'merchant_id', 'mcc', 'amount', 'currency', 'status', 'txn_ts_utc']
+E       card_transactions_20260929_135943_drift_swap.csv.gz: ['txn_id', 'merchant_id', 'card_id', 'mcc', 'amount', 'currency', 'status', 'txn_ts_utc']
+
+FAILED tests/test_schema_drift.py::test_staged_files_match_table
+======================= 1 failed, 1 passed in 14.59s =======================
+```
+
+Without the test, the 06:00 COPY would have loaded all 10 rows with no error, card IDs in `MERCHANT_ID` and merchant IDs in `CARD_ID`.
+
 `--drift rename` and `--drift extra` simulate the other common upstream changes. Cleanup commands are in [runbook.sql](runbook.sql).
 
 ## What is in here

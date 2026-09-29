@@ -8,3 +8,6 @@
 # personal notes and AI instructions (not part of the portfolio)
 CLAUDE.md
 .github/copilot-instructions.md
+
+# generated fake data
+data/

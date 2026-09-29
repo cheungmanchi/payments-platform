@@ -40,7 +40,7 @@ def main() -> None:
             print(f"{source}: {status}")
         if args.run_task:
             cur.execute(f"EXECUTE TASK {TASK}")
-            print(f"Triggered {TASK}. Check TASK_HISTORY in scratchpad.sql in about 1 minute.")
+            print(f"Triggered {TASK}. Check TASK_HISTORY in runbook.sql in about 1 minute.")
 
 
 if __name__ == "__main__":

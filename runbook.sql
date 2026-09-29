@@ -1,4 +1,4 @@
--- scratchpad.sql: ad hoc checks, run from the Snowflake VS Code extension.
+-- runbook.sql: operational checks and drift demos, run from the Snowflake VS Code extension.
 -- Not part of the Terraform config. Terraform owns every object below.
 
 -- 1. Who am I? (values for the SNOWFLAKE_* env vars)

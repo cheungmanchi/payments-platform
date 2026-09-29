@@ -37,7 +37,7 @@ uv run scripts/upload_to_stage.py
 uv run pytest -v                                                  # test_staged_files_match_table fails
 ```
 
-`--drift rename` and `--drift extra` simulate the other common upstream changes. Cleanup commands are in [scratchpad.sql](scratchpad.sql).
+`--drift rename` and `--drift extra` simulate the other common upstream changes. Cleanup commands are in [runbook.sql](runbook.sql).
 
 ## What is in here
 
@@ -47,7 +47,7 @@ uv run pytest -v                                                  # test_staged_
 | [ingest.tf](ingest.tf) | CSV file format, internal stage, `CARD_TRANSACTIONS` table, daily COPY task |
 | [scripts/](scripts/) | Fake transaction generator (stdlib only) and stage uploader |
 | [tests/](tests/) | The drift test |
-| [scratchpad.sql](scratchpad.sql) | Ad hoc checks: row counts, task history, credit burn |
+| [runbook.sql](runbook.sql) | Operational checks: row counts, task history, credit burn |
 
 ## Run it
 

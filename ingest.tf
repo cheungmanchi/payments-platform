@@ -71,6 +71,13 @@ resource "snowflake_table" "card_transactions" {
   }
 }
 
+# The table declaration is the contract. The COPY column list is derived from it, never hand written,
+# and tests/test_schema_drift.py checks both the live table and every staged file against it.
+locals {
+  card_txn_columns        = [for c in snowflake_table.card_transactions.column : c.name]
+  card_txn_source_columns = [for name in local.card_txn_columns : name if !startswith(name, "_")]
+}
+
 resource "snowflake_task" "load_card_transactions" {
   database  = snowflake_database.payments.name
   schema    = snowflake_schema.raw.name
@@ -85,9 +92,9 @@ resource "snowflake_task" "load_card_transactions" {
 
   sql_statement = <<-SQL
     COPY INTO ${snowflake_table.card_transactions.fully_qualified_name}
-      (TXN_ID, CARD_ID, MERCHANT_ID, MCC, AMOUNT, CURRENCY, STATUS, TXN_TS_UTC, _SOURCE_FILE, _LOADED_AT)
+      (${join(", ", local.card_txn_source_columns)}, _SOURCE_FILE, _LOADED_AT)
     FROM (
-      SELECT $1, $2, $3, $4, $5, $6, $7, $8, METADATA$FILENAME, CURRENT_TIMESTAMP()
+      SELECT ${join(", ", [for i in range(length(local.card_txn_source_columns)) : format("$%d", i + 1)])}, METADATA$FILENAME, CURRENT_TIMESTAMP()
       FROM @${snowflake_stage_internal.card_txn.fully_qualified_name}
     )
     FILE_FORMAT = (FORMAT_NAME = '${snowflake_file_format_csv.card_txn.fully_qualified_name}')

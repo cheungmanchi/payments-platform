@@ -22,7 +22,13 @@ FROM PAYMENTS.RAW.CARD_TRANSACTIONS
 GROUP BY _source_file
 ORDER BY loaded_at DESC;
 
--- 4. Trial credit burn by warehouse, last 7 days (ACCOUNT_USAGE lags up to 3 hours)
+-- 4. Drift demos for tests/test_schema_drift.py (each should turn one test red)
+-- A. Manual change behind Terraform's back. Undo with: terraform apply
+ALTER TABLE PAYMENTS.RAW.CARD_TRANSACTIONS ADD COLUMN FRAUD_FLAG BOOLEAN;
+-- B. After uploading a --drift file, remove it before the 06:00 UTC load picks it up
+REMOVE @PAYMENTS.RAW.CARD_TXN_STAGE PATTERN = '.*_drift_.*';
+
+-- 5. Trial credit burn by warehouse, last 7 days (ACCOUNT_USAGE lags up to 3 hours)
 SELECT warehouse_name, ROUND(SUM(credits_used), 2) AS credits
 FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY
 WHERE start_time >= DATEADD(day, -7, CURRENT_TIMESTAMP())

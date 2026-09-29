@@ -8,7 +8,10 @@ terraform {
   }
 }
 
-provider "snowflake" {} # credentials come from env vars only
+# Credentials come from env vars only. snowflake_table is still a preview resource in v2.
+provider "snowflake" {
+  preview_features_enabled = ["snowflake_table_resource"]
+}
 
 resource "snowflake_database" "payments" {
   name    = "PAYMENTS"

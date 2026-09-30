@@ -449,12 +449,14 @@ name = "payments-platform"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "cryptography" },
     { name = "pytest" },
     { name = "snowflake-connector-python" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "cryptography" },
     { name = "pytest", specifier = ">=8" },
     { name = "snowflake-connector-python", specifier = ">=3.12" },
 ]

@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform fmt -check -recursive
+      - name: validate platform stack
+        run: terraform init -backend=false -input=false && terraform validate
+      - name: validate bootstrap stack
+        working-directory: bootstrap
+        run: terraform init -backend=false -input=false && terraform validate
+
+  drift:
+    needs: static
+    runs-on: ubuntu-latest
+    # Runs as CI_SVC (role CI_READER): can plan and read, cannot change anything
+    env:
+      SNOWFLAKE_ORGANIZATION_NAME: ${{ vars.SNOWFLAKE_ORGANIZATION_NAME }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ vars.SNOWFLAKE_ACCOUNT_NAME }}
+      SNOWFLAKE_USER: CI_SVC
+      SNOWFLAKE_AUTHENTICATOR: SNOWFLAKE_JWT
+      SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+      - uses: astral-sh/setup-uv@v6
+      - run: terraform init -input=false
+      - run: uv run pytest -v

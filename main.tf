@@ -6,6 +6,14 @@ terraform {
       version = "~> 2.0"
     }
   }
+  # State lives in HCP Terraform so CI can plan against it. Execution mode is Local:
+  # plans run where the Snowflake credentials are (a laptop or GitHub Actions).
+  cloud {
+    organization = "cheungmanchi"
+    workspaces {
+      name = "payments-platform"
+    }
+  }
 }
 
 # Credentials come from env vars only. snowflake_table is still a preview resource in v2.

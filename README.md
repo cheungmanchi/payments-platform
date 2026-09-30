@@ -24,8 +24,9 @@ This repo protects the invariant with a single contract and a test that checks b
 ```
 
 1. **One contract.** Columns are declared once, in [ingest.tf](ingest.tf). The COPY statement's column list is derived from that declaration, so there is no second copy to forget.
-2. **Test A: Snowflake matches Terraform.** `terraform plan -detailed-exitcode` must be empty. A manual `ALTER TABLE` turns it red.
+2. **Test A: Snowflake matches Terraform.** `terraform plan -detailed-exitcode` on the contract table must be empty. A manual `ALTER TABLE` turns it red.
 3. **Test B: staged files match the table.** Before the 06:00 UTC load, every file on the stage must carry exactly the contract's header, in order. A swapped, renamed or extra column turns it red and names the file.
+4. **CI on every PR.** GitHub Actions runs both tests as `CI_SVC`, a key pair only service user with a read only role, defined in [bootstrap/](bootstrap/). State lives in HCP Terraform so CI plans against the same state as the admin.
 
 Both live in [tests/test_schema_drift.py](tests/test_schema_drift.py).
 

@@ -6,6 +6,7 @@ B. Staged files match the table: COPY maps CSV fields by position, so a producer
    Every file on the stage must carry the exact header the table expects, in order.
 
 Run: uv run pytest -v   (needs terraform on PATH and the SNOWFLAKE_* env vars)
+Auth: SNOWFLAKE_PRIVATE_KEY (PEM, as in CI) if set, otherwise SNOWFLAKE_PASSWORD.
 """
 
 import json
@@ -15,6 +16,7 @@ from pathlib import Path
 
 import pytest
 import snowflake.connector
+from cryptography.hazmat.primitives import serialization
 
 ROOT = Path(__file__).resolve().parent.parent
 STAGE = "PAYMENTS.RAW.CARD_TXN_STAGE"
@@ -35,12 +37,21 @@ def expected_header() -> list[str]:
     return [c["name"].lower() for c in table["values"]["column"] if not c["name"].startswith("_")]
 
 
+def auth_kwargs() -> dict:
+    pem = os.environ.get("SNOWFLAKE_PRIVATE_KEY")
+    if not pem:
+        return {"password": os.environ["SNOWFLAKE_PASSWORD"]}
+    key = serialization.load_pem_private_key(pem.encode(), password=None)
+    der = key.private_bytes(serialization.Encoding.DER, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
+    return {"authenticator": "SNOWFLAKE_JWT", "private_key": der}
+
+
 @pytest.fixture(scope="session")
 def cursor():
     conn = snowflake.connector.connect(
         account=f"{os.environ['SNOWFLAKE_ORGANIZATION_NAME']}-{os.environ['SNOWFLAKE_ACCOUNT_NAME']}",
         user=os.environ["SNOWFLAKE_USER"],
-        password=os.environ["SNOWFLAKE_PASSWORD"],
+        **auth_kwargs(),
         database="PAYMENTS",
         schema="RAW",
         warehouse="ETL_XS",
@@ -50,7 +61,12 @@ def cursor():
 
 
 def test_snowflake_matches_terraform():
-    plan = terraform("plan", "-detailed-exitcode", "-input=false", "-no-color", "-lock=false")
+    # Targets the contract table (plus its database and schema). A full plan also reads the task,
+    # which needs SHOW PARAMETERS IN TASK, and only the task owner may run that: CI stays read only.
+    plan = terraform(
+        "plan", "-detailed-exitcode", "-input=false", "-no-color", "-lock=false",
+        "-target=snowflake_table.card_transactions",
+    )
     assert plan.returncode != 1, f"terraform plan errored:\n{plan.stderr}"
     changes = [line for line in plan.stdout.splitlines() if line.lstrip().startswith(("#", "~", "+", "-"))]
     assert plan.returncode == 0, "Snowflake has drifted from Terraform:\n" + "\n".join(changes)
